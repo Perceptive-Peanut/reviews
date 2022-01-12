@@ -24,6 +24,8 @@ let reviewSchema = mongoose.Schema({
 });
 
 let charSchema = mongoose.Schema({
+  size: Number,
+  width: Number,
   fit: Number,
   length: Number,
   comfort: Number,

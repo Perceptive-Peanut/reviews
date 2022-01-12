@@ -1,43 +1,55 @@
 DROP DATABASE if exists reviews;
 CREATE DATABASE reviews;
 
-USE reviews;
+DROP TABLE reviews;
+DROP TABLE photos;
+DROP TABLE characteristics;
+DROP TABLE characteristic_reviews;
 
 CREATE TABLE reviews (
-  id SERIAL PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY,
+  product_id INT NOT NULL,
   rating SMALLINT NOT NULL,
-  summary VARCHAR(60),
-  recommend BOOLEAN,
-  response VARCHAR,
+  date BIGINT DEFAULT extract(epoch FROM NOW()),
+  summary VARCHAR(255),
   body VARCHAR(1000),
-  date TIMESTAMP DEFAULT NOW(),
-  reviewer_name VARCHAR(255),
-  reviewer_email VARCHAR(255),
-  helpfulness SMALLINT,
+  recommend BOOLEAN NOT NULL,
   reported BOOLEAN DEFAULT false,
-  product_id INT NOT NULL
+  reviewer_name VARCHAR(255) NOT NULL,
+  reviewer_email VARCHAR(255) NOT NULL,
+  response VARCHAR(1000) DEFAULT null,
+  helpfulness INT DEFAULT 0
 );
 
 CREATE TABLE photos (
-  id SERIAL PRIMARY KEY,
-  url VARCHAR(255),
-  review_id REFERENCES reviews ON DELETE CASCADE
+  id BIGSERIAL PRIMARY KEY,
+  review_id INT,
+  url VARCHAR(255)
 );
 
-CREATE TYPE characteristic AS ENUM ('fit', 'length', 'comfort', 'quality');
+CREATE TYPE characteristic AS ENUM ('Size', 'Width', 'Fit', 'Length', 'Comfort', 'Quality');
 
 CREATE TABLE characteristics (
-  id SERIAL PRIMARY KEY,
-  name characteristic,
-  product_id INT NOT NULL
+  id BIGSERIAL PRIMARY KEY,
+  product_id INT NOT NULL,
+  name characteristic
 );
 
-CREATE TABLE review_characteristics (
-  id SERIAL PRIMARY KEY,
-  value SMALLINT,
-  characteristic_id REFERENCES characteristics,
-  review_id REFERENCES reviews
-)
+CREATE TABLE characteristic_reviews (
+  id BIGSERIAL PRIMARY KEY,
+  characteristic_id INT,
+  review_id INT,
+  value SMALLINT
+);
+
+ALTER TABLE photos ADD CONSTRAINT reviews_fkey FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE CASCADE;
+ALTER TABLE characteristic_reviews ADD CONSTRAINT char_fkey FOREIGN KEY(characteristic_id) REFERENCES characteristics(id) ON DELETE CASCADE;
+ALTER TABLE characteristic_reviews ADD CONSTRAINT review_fkey FOREIGN KEY(review_id) REFERENCES reviews(id) ON DELETE CASCADE;
+
+\COPY reviews FROM '/Users/saarika/Documents/HackReactor/SDCData/reviews.csv' DELIMITER ',' CSV HEADER; --COPY 5774952
+\COPY photos FROM '/Users/saarika/Documents/HackReactor/SDCData/reviews_photos.csv' DELIMITER ',' CSV HEADER; --COPY 2742540
+\COPY characteristics FROM '/Users/saarika/Documents/HackReactor/SDCData/characteristics.csv' DELIMITER ',' CSV HEADER; --COPY 3347679
+\COPY characteristic_reviews FROM '/Users/saarika/Documents/HackReactor/SDCData/characteristic_reviews.csv' DELIMITER ',' CSV HEADER; --COPY 19327575
 
 CREATE INDEX review_product_idx ON reviews(product_id);
 
