@@ -1,14 +1,36 @@
 --GET /reviews/
-/* Parameter	Type	    Description
-    page	    integer	   Selects the page of results to return. Default 1.
-    count	    integer	   Specifies how many results per page to return. Default 5.
-    sort	    text	     Changes the sort order of reviews to be based on "newest", "helpful", or "relevant"
-  product_id	integer	   Specifies the product for which to retrieve reviews. */
 
-SELECT reviews.id, reviews.rating, reviews.summary, reviews.recommend, reviews.response, reviews.body, reviews.date, reviews.reviewer_name, reviews.helpfulness, photos.id, photos.url FROM reviews, photos
-  WHERE reviews.id = photos.review_id AND product_id = product_id(query provided id) AND reported = false
-  ORDER BY helpfulness(query provided sort) DESC
-  LIMIT (query provided #);
+-- No shaping done by PostgreSQL: ORDER BY HELPFULNESS
+  SELECT r.id, r.rating, r.summary, r.recommend, r.response, r.body, r.date, r.reviewer_name, r.helpfulness, photos.photo_id, photos.url
+    FROM reviews r LEFT JOIN photos
+    ON r.id = photos.review_id WHERE r.product_id = $1
+    AND r.reported = false
+    ORDER BY date
+    DESC LIMIT $2
+
+-- No shaping done by PostgreSQL: ORDER BY DATE OR RELEVEANCE
+  SELECT r.id, r.rating, r.summary, r.recommend, r.response, r.body, r.date, r.reviewer_name, r.helpfulness, photos.photo_id, photos.url
+    FROM reviews r LEFT JOIN photos
+    ON r.id = photos.review_id WHERE r.product_id = $1
+    AND r.reported = false
+    ORDER BY helpfulness DESC LIMIT $2
+
+-- Shaping of photos array done by PostgreSQL
+  SELECT json_agg(json_build_object('review_id', r.id, 'rating', r.rating, 'summary', r.summary, 'recommend', r.recommend, 'response', r.response, 'body', r.body, 'date', r.date, 'reviewer_name', r.reviewer_name, 'helpfulness', r.helpfulness, 'photos',
+    (SELECT json_agg(json_build_object('id', p.photo_id, 'url', p.url)) FROM photos p WHERE r.id = p.review_id)))
+    FROM reviews r WHERE r.product_id = $1
+    AND r.reported = false
+    ORDER BY helpfulness DESC LIMIT $2
+
+---------------------------------------------------------------------------------------------------------
+--GET /reviews/meta
+
+-- Ratings grouped, counted, and ordered
+SELECT rating, COUNT (rating) FROM reviews WHERE product_id = $1 GROUP BY rating ORDER BY rating ASC
+-- Recommends grouped and counted
+SELECT recommend, COUNT (recommend) FROM reviews WHERE product_id = $1 GROUP BY recommend
+-- Characteristics
+
 
 /* {
   "product": "2",
@@ -36,10 +58,6 @@ SELECT reviews.id, reviews.rating, reviews.summary, reviews.recommend, reviews.r
         // ...
       ]
     }, */
-
---GET /reviews/meta
-/* Parameter	Type	    Description
-  product_id	integer	   Specifies the product for which to retrieve reviews. */
 
 /* {
   "product_id": "2",

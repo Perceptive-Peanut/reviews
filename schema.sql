@@ -22,7 +22,7 @@ CREATE TABLE reviews (
 );
 
 CREATE TABLE photos (
-  id BIGSERIAL PRIMARY KEY,
+  photo_id BIGSERIAL PRIMARY KEY,
   review_id INT,
   url VARCHAR(255)
 );
