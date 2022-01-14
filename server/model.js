@@ -5,9 +5,9 @@ module.exports = {
   getAllReviews: (productId, count, sort) => {
     let text;
     if (sort === 'newest') {
-      text = `SELECT json_agg(json_build_object('review_id', r.id, 'rating', r.rating, 'summary', r.summary, 'recommend', r.recommend, 'response', r.response, 'body', r.body, 'date', r.date, 'reviewer_name', r.reviewer_name, 'helpfulness', r.helpfulness, 'photos', (SELECT json_agg(json_build_object('id', p.photo_id, 'url', p.url)) FROM photos p WHERE r.id = p.review_id))) FROM reviews r WHERE r.product_id = $1 AND r.reported = false ORDER BY date DESC LIMIT $2`;
+      text = `SELECT json_agg(json_build_object('review_id', r.id, 'rating', r.rating, 'summary', r.summary, 'recommend', r.recommend, 'response', r.response, 'body', r.body, 'date', TO_TIMESTAMP(r.date/1000), 'reviewer_name', r.reviewer_name, 'helpfulness', r.helpfulness, 'photos', (SELECT json_agg(json_build_object('id', p.photo_id, 'url', p.url)) FROM photos p WHERE r.id = p.review_id))) FROM reviews r WHERE r.product_id = $1 AND r.reported = false GROUP BY r.date ORDER BY r.date DESC LIMIT $2`;
     } else {
-      text = `SELECT json_agg(json_build_object('review_id', r.id, 'rating', r.rating, 'summary', r.summary, 'recommend', r.recommend, 'response', r.response, 'body', r.body, 'date', r.date, 'reviewer_name', r.reviewer_name, 'helpfulness', r.helpfulness, 'photos', (SELECT json_agg(json_build_object('id', p.photo_id, 'url', p.url)) FROM photos p WHERE r.id = p.review_id))) FROM reviews r WHERE r.product_id = $1 AND r.reported = false LIMIT $2`;
+      text = `SELECT json_agg(json_build_object('review_id', r.id, 'rating', r.rating, 'summary', r.summary, 'recommend', r.recommend, 'response', r.response, 'body', r.body, 'date', TO_TIMESTAMP(r.date/1000), 'reviewer_name', r.reviewer_name, 'helpfulness', r.helpfulness, 'photos', (SELECT json_agg(json_build_object('id', p.photo_id, 'url', p.url)) FROM photos p WHERE r.id = p.review_id))) FROM reviews r WHERE r.product_id = $1 AND r.reported = false LIMIT $2`;
     }
     let values = [productId, count];
     return client.query(text, values)
@@ -25,31 +25,64 @@ module.exports = {
     let values3 = [productId];
     const queries = [client.query(text, values), client.query(text2, values2), client.query(text3, values3)]
     return Promise.all(queries)
-      .then(results => {
+      .then((results) => {
         return [results[0].rows, results[1].rows, results[2].rows];
       })
       .catch(e => console.error(e.stack));
   },
-  postReviews: () => {
-    let text = '';
-    let values = [];
-    client.query(text, values)
-      .then(res => {
-        console.log(res.rows);
+  postReviews: ({ product_id, rating, summary, body, recommend, reviewer_name, reviewer_email, photos, characteristics }) => {
+    summary = summary || null;
+    body = body || null;
+    let text = 'INSERT INTO reviews(product_id, rating, summary, body, recommend, reviewer_name, reviewer_email) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id AS review_id';
+    let values = [product_id, rating, summary, body, recommend, reviewer_name, reviewer_email];
+    let queries = [client.query(text, values)];
+
+    if (characteristics && Object.keys(characteristics).length !== 0) {
+      let text2 = 'INSERT INTO characteristics(product_id, name) VALUES($1, $2) RETURNING id, name';
+      for (let key of characteristics) {
+        let values2 = [product_id, key];
+        queries.push(client.query(text2, values2));
+      }
+    }
+
+    return Promise.all(queries)
+      .then((results) => {
+        return results[0].rows[0];
+      })
+      .then(({review_id}) => {
+        let queries2 = [];
+        if (photos && photos.length !== 0) {
+          let text3 = 'INSERT INTO photos(review_id, url) VALUES($1, $2)'
+          for (let i = 0; i < photos.length; i++) {
+            let values3 = [review_id, photos[i]];
+            queries2.push(client.query(text3, values3));
+          }
+        }
+        if (characteristics && Object.keys(characteristics).length !== 0) {
+          let text4 = 'INSERT INTO characteristic_reviews(characteristic_id, review_id, value) VALUES($1, $2, $3)';
+          for (let key of characteristics) {
+            let values4 = [characteristic_id, review_id, characteristics[key]];
+            queries2.push(client.query(text4, values4));
+          }
+        }
+        return Promise.all(queries2);
       })
       .catch(e => console.error(e.stack));
-      // const [review, setReview] = useState({
-      //   summary: '',
-      //   body: '',
-      //   name: '',
-      //   email: '',
-      //   photos: [],
-      //   characteristics: {},
-      // });
-  }
-};
+    }
+  };
 
 /* Reviews Meta DB results
+Reviews (id) added" 5774954, 5774955, 5774956, 5774957
+{
+    "product_id": 1,
+    "rating" : 5,
+    "summary" : "This product was amazing!",
+    "body" : "I really loved this product. It was everything I could want and more",
+    "recommend" : true,
+    "reviewer_name" : "helloworld",
+    "reviewer_email" : "helloworld@gmail.com"
+}
+
 [
   { rating: 2, count: '1' },
   { rating: 3, count: '1' },

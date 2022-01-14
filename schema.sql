@@ -45,6 +45,7 @@ CREATE TABLE characteristic_reviews (
 ALTER TABLE photos ADD CONSTRAINT reviews_fkey FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE CASCADE;
 ALTER TABLE characteristic_reviews ADD CONSTRAINT char_fkey FOREIGN KEY(characteristic_id) REFERENCES characteristics(id) ON DELETE CASCADE;
 ALTER TABLE characteristic_reviews ADD CONSTRAINT review_fkey FOREIGN KEY(review_id) REFERENCES reviews(id) ON DELETE CASCADE;
+--ALTER TABLE reviews ALTER COLUMN date SET DATA TYPE timestamp with time zone USING to_timestamp(date/1000);
 
 CREATE INDEX review_product_idx ON reviews(product_id);
 CREATE INDEX photos_review_idx ON photos(review_id);

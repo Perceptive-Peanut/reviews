@@ -43,9 +43,9 @@ module.exports = {
       .catch(err => { console.log(err); });
   },
   postReview: (req, res) => {
-    model.postReviews(req.query)
+    model.postReviews(req.body)
       .then(() => {
-
+        res.sendStatus(201);
       })
       .catch(err => { console.log(err); });
   }

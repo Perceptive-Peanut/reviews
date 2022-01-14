@@ -1,22 +1,15 @@
 --GET /reviews/
 
 -- No shaping done by PostgreSQL: ORDER BY HELPFULNESS
-  SELECT r.id, r.rating, r.summary, r.recommend, r.response, r.body, r.date, r.reviewer_name, r.helpfulness, photos.photo_id, photos.url
+  SELECT r.id, r.rating, r.summary, r.recommend, r.response, r.body, TO_TIMESTAMP(r.date/1000), r.reviewer_name, r.helpfulness, photos.photo_id, photos.url
     FROM reviews r LEFT JOIN photos
     ON r.id = photos.review_id WHERE r.product_id = $1
     AND r.reported = false
     ORDER BY date
     DESC LIMIT $2
 
--- No shaping done by PostgreSQL: ORDER BY DATE OR RELEVEANCE
-  SELECT r.id, r.rating, r.summary, r.recommend, r.response, r.body, r.date, r.reviewer_name, r.helpfulness, photos.photo_id, photos.url
-    FROM reviews r LEFT JOIN photos
-    ON r.id = photos.review_id WHERE r.product_id = $1
-    AND r.reported = false
-    ORDER BY helpfulness DESC LIMIT $2
-
 -- Shaping of photos array done by PostgreSQL
-  SELECT json_agg(json_build_object('review_id', r.id, 'rating', r.rating, 'summary', r.summary, 'recommend', r.recommend, 'response', r.response, 'body', r.body, 'date', r.date, 'reviewer_name', r.reviewer_name, 'helpfulness', r.helpfulness, 'photos',
+  SELECT json_agg(json_build_object('review_id', r.id, 'rating', r.rating, 'summary', r.summary, 'recommend', r.recommend, 'response', r.response, 'body', r.body, 'date', TO_TIMESTAMP(r.date/1000), 'reviewer_name', r.reviewer_name, 'helpfulness', r.helpfulness, 'photos',
     (SELECT json_agg(json_build_object('id', p.photo_id, 'url', p.url)) FROM photos p WHERE r.id = p.review_id)))
     FROM reviews r WHERE r.product_id = $1
     AND r.reported = false
