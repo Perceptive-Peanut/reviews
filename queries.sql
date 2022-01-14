@@ -29,8 +29,8 @@
 SELECT rating, COUNT (rating) FROM reviews WHERE product_id = $1 GROUP BY rating ORDER BY rating ASC
 -- Recommends grouped and counted
 SELECT recommend, COUNT (recommend) FROM reviews WHERE product_id = $1 GROUP BY recommend
--- Characteristics
-
+-- Characteristics grouped and averaged
+SELECT c.name, (SELECT json_build_object('id', c.id, 'value', AVG (cr.value))) FROM characteristics c LEFT JOIN characteristic_reviews cr ON c.id = cr.characteristic_id WHERE c.product_id = $1 GROUP BY c.id
 
 /* {
   "product": "2",

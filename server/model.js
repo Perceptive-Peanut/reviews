@@ -17,20 +17,20 @@ module.exports = {
       .catch((err) => console.error(err.stack));
   },
   getMetaData: (productId) => {
-    // group by chars
-    // get avg of chars for each review
     let text = 'SELECT rating, COUNT (rating) FROM reviews WHERE product_id = $1 GROUP BY rating ORDER BY rating ASC';
     let values = [productId];
     let text2 = 'SELECT recommend, COUNT (recommend) FROM reviews WHERE product_id = $1 GROUP BY recommend';
     let values2 = [productId];
-    return client.query(text2, values2)
+    let text3 = `SELECT c.name, (SELECT json_build_object('id', c.id, 'value', AVG (cr.value))) FROM characteristics c LEFT JOIN characteristic_reviews cr ON c.id = cr.characteristic_id WHERE c.product_id = $1 GROUP BY c.id`
+    let values3 = [productId];
+    const queries = [client.query(text, values), client.query(text2, values2), client.query(text3, values3)]
+    return Promise.all(queries)
       .then(results => {
-        return results.rows;
+        return [results[0].rows, results[1].rows, results[2].rows];
       })
       .catch(e => console.error(e.stack));
   },
   postReviews: () => {
-
     let text = '';
     let values = [];
     client.query(text, values)
@@ -38,10 +38,16 @@ module.exports = {
         console.log(res.rows);
       })
       .catch(e => console.error(e.stack));
+      // const [review, setReview] = useState({
+      //   summary: '',
+      //   body: '',
+      //   name: '',
+      //   email: '',
+      //   photos: [],
+      //   characteristics: {},
+      // });
   }
 };
-
-// SELECT json_object_keys(SELECT rating, COUNT (rating) FROM reviews WHERE product_id = $1 GROUP BY rating ORDER BY rating ASC))
 
 /* Reviews Meta DB results
 [
@@ -59,6 +65,74 @@ module.exports = {
     {
         "recommend": true,
         "count": "3"
+    }
+]
+
+SELECT json_build_object(c.name, (SELECT json_build_object('id', c.id, 'value', AVG (cr.value)))) FROM characteristics c LEFT JOIN characteristic_reviews cr ON c.id = cr.characteristic_id WHERE c.product_id = $1 GROUP BY c.id
+[
+    {
+        "json_build_object": {
+            "Fit": {
+                "id": 1,
+                "value": 4
+            }
+        }
+    },
+    {
+        "json_build_object": {
+            "Length": {
+                "id": 2,
+                "value": 3.5
+            }
+        }
+    },
+    {
+        "json_build_object": {
+            "Comfort": {
+                "id": 3,
+                "value": 5
+            }
+        }
+    },
+    {
+        "json_build_object": {
+            "Quality": {
+                "id": 4,
+                "value": 4
+            }
+        }
+    }
+]
+
+SELECT c.name, (SELECT json_build_object('id', c.id, 'value', AVG (cr.value))) FROM characteristics c LEFT JOIN characteristic_reviews cr ON c.id = cr.characteristic_id WHERE c.product_id = $1 GROUP BY c.id
+[
+    {
+        "name": "Fit",
+        "json_build_object": {
+            "id": 1,
+            "value": 4
+        }
+    },
+    {
+        "name": "Length",
+        "json_build_object": {
+            "id": 2,
+            "value": 3.5
+        }
+    },
+    {
+        "name": "Comfort",
+        "json_build_object": {
+            "id": 3,
+            "value": 5
+        }
+    },
+    {
+        "name": "Quality",
+        "json_build_object": {
+            "id": 4,
+            "value": 4
+        }
     }
 ]
 
