@@ -12,9 +12,11 @@ module.exports = {
           results
         }
         res.status(200).send(allReviews);
-        // date needs to be converted to 2022-01-05T00:00:00.000Z (SELECT to_timestamp(unix timestamp/1000) AT TIME ZONE 'UTC'; --> 2020-07-30 03:41:21)
       })
-      .catch(err => { console.log(err); });
+      .catch(err => {
+        console.log(err);
+        res.sendStatus(500);
+      });
   },
   getMeta: (req, res) => {
     const { product_id } = req.query
@@ -40,13 +42,39 @@ module.exports = {
         }
         res.status(200).send(metaData);
       })
-      .catch(err => { console.log(err); });
+      .catch(err => {
+        console.log(err);
+        res.sendStatus(500);
+      });
   },
   postReview: (req, res) => {
     model.postReviews(req.body)
       .then(() => {
         res.sendStatus(201);
       })
-      .catch(err => { console.log(err); });
+      .catch(err => {
+        console.log(err);
+        res.sendStatus(500);
+      });
+  },
+  updateHelpful: (req, res) => {
+    model.addHelpful(req.params.review_id)
+      .then(() => {
+        res.sendStatus(200);
+      })
+      .catch(err => {
+        console.log(err);
+        res.sendStatus(500);
+      });
+  },
+  updateReport: (req, res) => {
+    model.addReport(req.params.review_id)
+      .then(() => {
+        res.sendStatus(200);
+      })
+      .catch(err => {
+        console.log(err);
+        res.sendStatus(500);
+      });
   }
 };

@@ -7,7 +7,7 @@ module.exports = {
     if (sort === 'newest') {
       text = `SELECT json_agg(json_build_object('review_id', r.id, 'rating', r.rating, 'summary', r.summary, 'recommend', r.recommend, 'response', r.response, 'body', r.body, 'date', TO_TIMESTAMP(r.date/1000), 'reviewer_name', r.reviewer_name, 'helpfulness', r.helpfulness, 'photos', (SELECT json_agg(json_build_object('id', p.photo_id, 'url', p.url)) FROM photos p WHERE r.id = p.review_id))) FROM reviews r WHERE r.product_id = $1 AND r.reported = false GROUP BY r.date ORDER BY r.date DESC LIMIT $2`;
     } else {
-      text = `SELECT json_agg(json_build_object('review_id', r.id, 'rating', r.rating, 'summary', r.summary, 'recommend', r.recommend, 'response', r.response, 'body', r.body, 'date', TO_TIMESTAMP(r.date/1000), 'reviewer_name', r.reviewer_name, 'helpfulness', r.helpfulness, 'photos', (SELECT json_agg(json_build_object('id', p.photo_id, 'url', p.url)) FROM photos p WHERE r.id = p.review_id))) FROM reviews r WHERE r.product_id = $1 AND r.reported = false LIMIT $2`;
+      text = `SELECT json_agg(json_build_object('review_id', r.id, 'rating', r.rating, 'summary', r.summary, 'recommend', r.recommend, 'response', r.response, 'body', r.body, 'date', TO_TIMESTAMP(r.date/1000), 'reviewer_name', r.reviewer_name, 'helpfulness', r.helpfulness, 'photos', (SELECT json_agg(json_build_object('id', p.photo_id, 'url', p.url)) FROM photos p WHERE r.id = p.review_id))) FROM reviews r WHERE r.product_id = $1 AND r.reported = false GROUP BY r.helpfulness ORDER BY r.helpfulness LIMIT $2`;
     }
     let values = [productId, count];
     return client.query(text, values)
@@ -68,6 +68,25 @@ module.exports = {
         return Promise.all(queries2);
       })
       .catch(e => console.error(e.stack));
+    },
+
+    addHelpful: (review_id) => {
+      let text = 'UPDATE reviews SET helpfulness = helpfulness + 1 WHERE id = $1';
+      let values = [review_id];
+      return client.query(text, values)
+        .then((results) => {
+          return results;
+        })
+        .catch((err) => console.error(err.stack));
+    },
+    addReport: (review_id) => {
+      let text = 'UPDATE reviews SET reported = true WHERE id = $1';
+      let values = [review_id];
+      return client.query(text, values)
+        .then((results) => {
+          return results;
+        })
+        .catch((err) => console.error(err.stack));
     }
   };
 

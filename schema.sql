@@ -10,7 +10,7 @@ CREATE TABLE reviews (
   id BIGSERIAL PRIMARY KEY,
   product_id INT NOT NULL,
   rating SMALLINT NOT NULL,
-  date BIGINT DEFAULT extract(epoch FROM NOW()),
+  date BIGINT DEFAULT extract(epoch FROM NOW()) * 1000,
   summary VARCHAR(255),
   body VARCHAR(1000),
   recommend BOOLEAN NOT NULL,
