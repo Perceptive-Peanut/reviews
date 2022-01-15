@@ -3,6 +3,7 @@ const client = require('../db/index.js');
 
 module.exports = {
   getAllReviews: (productId, count, sort) => {
+    count = count || 5;
     let text;
     if (sort === 'newest') {
       text = `SELECT json_agg(json_build_object('review_id', r.id, 'rating', r.rating, 'summary', r.summary, 'recommend', r.recommend, 'response', r.response, 'body', r.body, 'date', TO_TIMESTAMP(r.date/1000), 'reviewer_name', r.reviewer_name, 'helpfulness', r.helpfulness, 'photos', (SELECT json_agg(json_build_object('id', p.photo_id, 'url', p.url)) FROM photos p WHERE r.id = p.review_id))) FROM reviews r WHERE r.product_id = $1 AND r.reported = false GROUP BY r.date ORDER BY r.date DESC LIMIT $2`;

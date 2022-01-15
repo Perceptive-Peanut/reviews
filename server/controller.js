@@ -3,9 +3,10 @@ const model = require('./model');
 
 module.exports = {
   getReviews: (req, res) => {
-    const { product_id, count, sort } = req.query;
+    let { product_id, count, sort } = req.query;
     model.getAllReviews(product_id, count, sort)
       .then((results) => {
+        count = count || 5;
         const allReviews = {
           product: product_id,
           count,
