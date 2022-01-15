@@ -19,63 +19,14 @@
 --GET /reviews/meta
 
 -- Ratings grouped, counted, and ordered
-SELECT rating, COUNT (rating) FROM reviews WHERE product_id = $1 GROUP BY rating ORDER BY rating ASC
+SELECT rating, COUNT (rating) FROM reviews WHERE product_id = 1 GROUP BY rating ORDER BY rating ASC
 -- Recommends grouped and counted
-SELECT recommend, COUNT (recommend) FROM reviews WHERE product_id = $1 GROUP BY recommend
+SELECT recommend, COUNT (recommend) FROM reviews WHERE product_id = 1 GROUP BY recommend
 -- Characteristics grouped and averaged
 SELECT c.name, (SELECT json_build_object('id', c.id, 'value', AVG (cr.value))) FROM characteristics c LEFT JOIN characteristic_reviews cr ON c.id = cr.characteristic_id WHERE c.product_id = $1 GROUP BY c.id
 
-/* {
-  "product": "2",
-  "page": 0,
-  "count": 5,
-  "results": [
-    {
-      "review_id": 5,
-      "rating": 3,
-      "summary": "I'm enjoying wearing these shades",
-      "recommend": false,
-      "response": null,
-      "body": "Comfortable and practical.",
-      "date": "2019-04-14T00:00:00.000Z",
-      "reviewer_name": "shortandsweeet",
-      "helpfulness": 5,
-      "photos": [{
-          "id": 1,
-          "url": "urlplaceholder/review_5_photo_number_1.jpg"
-        },
-        {
-          "id": 2,
-          "url": "urlplaceholder/review_5_photo_number_2.jpg"
-        },
-        // ...
-      ]
-    }, */
+--Trying to combine ratings and recommends queries
+SELECT rating, count(rating) AS rating_count, recommend, count(recommend) AS recommend_count
+  FROM reviews WHERE product_id = 1 GROUP BY rating, recommend ORDER BY rating ASC
 
-/* {
-  "product_id": "2",
-  "ratings": {
-    2: 1,
-    3: 1,
-    4: 2,
-    // ...
-  },
-  "recommended": {
-    0: 5
-    // ...
-  },
-  "characteristics": {
-    "Size": {
-      "id": 14,
-      "value": "4.0000"
-    },
-    "Width": {
-      "id": 15,
-      "value": "3.5000"
-    },
-    "Comfort": {
-      "id": 16,
-      "value": "4.0000"
-    },
-    // ...
-} */
+SELECT json_build_object(rating, count(rating)) FROM reviews WHERE product_id = 1 GROUP BY rating, recommend ORDER BY rating ASC;

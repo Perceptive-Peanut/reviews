@@ -18,6 +18,7 @@ module.exports = {
         res.sendStatus(500);
       });
   },
+
   getMeta: (req, res) => {
     const { product_id } = req.query
     model.getMetaData(product_id)
@@ -47,6 +48,7 @@ module.exports = {
         res.sendStatus(500);
       });
   },
+
   postReview: (req, res) => {
     model.postReviews(req.body)
       .then(() => {
@@ -57,6 +59,7 @@ module.exports = {
         res.sendStatus(500);
       });
   },
+
   updateHelpful: (req, res) => {
     model.addHelpful(req.params.review_id)
       .then(() => {
@@ -67,6 +70,7 @@ module.exports = {
         res.sendStatus(500);
       });
   },
+
   updateReport: (req, res) => {
     model.addReport(req.params.review_id)
       .then(() => {

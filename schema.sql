@@ -49,3 +49,5 @@ ALTER TABLE characteristic_reviews ADD CONSTRAINT review_fkey FOREIGN KEY(review
 
 CREATE INDEX review_product_idx ON reviews(product_id);
 CREATE INDEX photos_review_idx ON photos(review_id);
+CREATE INDEX char_idx ON characteristic_reviews(characteristic_id);
+CREATE INDEX char_product_idx ON characteristics(product_id);
