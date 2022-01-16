@@ -4,7 +4,7 @@ const Joi = frisby.Joi;
 
 const randomIdGenerator = () => {
   return Math.floor(Math.random() * 1000012);
-}
+};
 
 it ('Get reviews should return a status of 200', function () {
   let id = randomIdGenerator();
