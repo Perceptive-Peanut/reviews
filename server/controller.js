@@ -5,7 +5,8 @@ module.exports = {
   getReviews: (req, res) => {
     let { product_id, count, sort } = req.query;
     model.getAllReviews(product_id, count, sort)
-      .then((results) => {
+      .then((data) => {
+        let results = data.rows[0].json_agg;
         count = count || 5;
         const allReviews = {
           product: product_id,
@@ -15,7 +16,7 @@ module.exports = {
         res.status(200).send(allReviews);
       })
       .catch(err => {
-        console.log(err);
+        console.error(err.stack);
         res.sendStatus(500);
       });
   },
@@ -24,28 +25,10 @@ module.exports = {
     const { product_id } = req.query
     model.getMetaData(product_id)
       .then((results) => {
-        const metaData = {
-          product_id,
-          ratings: {},
-          recommended: {},
-          characteristics: {}
-        }
-        for (let i = 0; i < results[0].length; i++) {
-          let currRating = results[0][i];
-          metaData.ratings[currRating.rating] = currRating.count;
-        }
-        for (let j = 0; j < results[1].length; j++) {
-          let currRec = results[1][j];
-          metaData.recommended[currRec.recommend] = currRec.count;
-        }
-        for (let k = 0; k < results[2].length; k++) {
-          let currChar = results[2][k];
-          metaData.characteristics[currChar.name] = currChar['json_build_object'];
-        }
-        res.status(200).send(metaData);
+        res.status(200).send(results.rows[0].json_build_object);
       })
       .catch(err => {
-        console.log(err);
+        console.error(e.stack);
         res.sendStatus(500);
       });
   },
@@ -67,7 +50,7 @@ module.exports = {
         res.sendStatus(200);
       })
       .catch(err => {
-        console.log(err);
+        console.error(err.stack);
         res.sendStatus(500);
       });
   },
@@ -78,7 +61,7 @@ module.exports = {
         res.sendStatus(200);
       })
       .catch(err => {
-        console.log(err);
+        console.error(err.stack);
         res.sendStatus(500);
       });
   }

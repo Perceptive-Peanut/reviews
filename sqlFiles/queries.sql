@@ -25,8 +25,5 @@ SELECT recommend, COUNT (recommend) FROM reviews WHERE product_id = 1 GROUP BY r
 -- Characteristics grouped and averaged
 SELECT c.name, (SELECT json_build_object('id', c.id, 'value', AVG (cr.value))) FROM characteristics c LEFT JOIN characteristic_reviews cr ON c.id = cr.characteristic_id WHERE c.product_id = $1 GROUP BY c.id
 
---Trying to combine ratings and recommends queries
-SELECT rating, count(rating) AS rating_count, recommend, count(recommend) AS recommend_count
-  FROM reviews WHERE product_id = 1 GROUP BY rating, recommend ORDER BY rating ASC
-
-SELECT json_build_object(rating, count(rating)) FROM reviews WHERE product_id = 1 GROUP BY rating, recommend ORDER BY rating ASC;
+--Combine all meta queries
+SELECT json_build_object('product_id', product_id, 'ratings', (SELECT json_object_agg(rating, count) FROM (SELECT rating, count(*) as count from reviews WHERE product_id = $1 GROUP BY rating ORDER BY rating ASC) r), 'recommended', (SELECT json_object_agg(recommend, count) FROM (SELECT recommend, count(*) as count FROM reviews WHERE product_id = $1 group by recommend) rec), 'characteristics', (SELECT json_object_agg(name, json_build_object('id', id, 'value', value)) FROM (SELECT  c.name, c.id, sum(value)/count(*) as value FROM characteristics c LEFT JOIN characteristic_reviews cr ON c.id = cr.characteristic_id WHERE c.product_id = $1 GROUP BY c.name, c.id) r)) FROM reviews WHERE product_id = $1

@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "start": "node server/index.js"
   },
   "repository": {
     "type": "git",
@@ -19,6 +20,7 @@
   "homepage": "https://github.com/Perceptive-Peanut/reviews#readme",
   "dependencies": {
     "express": "^4.17.2",
+    "newrelic": "^8.7.1",
     "pg": "^8.7.1"
   },
   "devDependencies": {
