@@ -6,7 +6,10 @@ module.exports = {
     let { product_id, count, sort } = req.query;
     model.getAllReviews(product_id, count, sort)
       .then((data) => {
-        let results = data.rows[0].json_agg;
+        let results;
+        if (data.rows[0]) {
+          results = data.rows[0].json_agg
+        }
         count = count || 5;
         const allReviews = {
           product: product_id,
@@ -16,8 +19,7 @@ module.exports = {
         res.status(200).send(allReviews);
       })
       .catch(err => {
-        console.error(err.stack);
-        res.sendStatus(500);
+        res.status(500).send(err);
       });
   },
 
@@ -25,11 +27,16 @@ module.exports = {
     const { product_id } = req.query
     model.getMetaData(product_id)
       .then((results) => {
-        res.status(200).send(results.rows[0].json_build_object);
+        let data = {
+          product_id
+        };
+        if (results.rows[0]) {
+          data = results.rows[0].json_build_object;
+        }
+        res.status(200).send(data);
       })
       .catch(err => {
-        console.error(e.stack);
-        res.sendStatus(500);
+        res.status(500).send(err);
       });
   },
 
@@ -39,8 +46,7 @@ module.exports = {
         res.sendStatus(201);
       })
       .catch(err => {
-        console.log(err);
-        res.sendStatus(500);
+        res.status(500).send(err);
       });
   },
 
@@ -50,8 +56,7 @@ module.exports = {
         res.sendStatus(200);
       })
       .catch(err => {
-        console.error(err.stack);
-        res.sendStatus(500);
+        res.status(500).send(err);
       });
   },
 
@@ -61,8 +66,7 @@ module.exports = {
         res.sendStatus(200);
       })
       .catch(err => {
-        console.error(err.stack);
-        res.sendStatus(500);
+        res.status(500).send(err);
       });
   }
 };

@@ -11,9 +11,9 @@ const pool = new Pool({
   connectionTimeoutMillis: 2000,
 });
 
-pool.on('connect', () => {
-  console.log('PostgreSQL connected!');
-});
+pool.connect()
+  .then(() => console.log('PostgreSQL connected!'))
+  .catch((err) => console.error('DB connection error: ', err.stack));
 
 pool.on('error', (err) => {
   console.error('Unexpected error on idle client', err);
