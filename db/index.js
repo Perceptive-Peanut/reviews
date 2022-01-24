@@ -1,7 +1,7 @@
 const { Pool } = require('pg');
 
 const pool = new Pool({
-  host: '3.93.68.251',
+  host: '',
   database: 'reviews',
   user: 'sdc',
   password: process.env.POSTGRES_PWD,
@@ -11,15 +11,9 @@ const pool = new Pool({
   connectionTimeoutMillis: 2000,
 });
 
-pool.connect()
-  .then(() => console.log('PostgreSQL connected!'))
-  .catch((err) => console.error('DB connection error: ', err.stack));
-
 pool.on('error', (err) => {
   console.error('Unexpected error on idle client', err);
   process.exit(-1);
 });
 
-module.exports = {
-  query: (text, params) => pool.query(text, params),
-};
+module.exports.pool = pool;

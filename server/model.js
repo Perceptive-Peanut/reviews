@@ -1,5 +1,5 @@
 /* eslint-disable */
-const client = require('../db/index.js');
+const { pool } = require('../db/index.js');
 
 module.exports = {
   getAllReviews: (productId, count, sort) => {
@@ -11,7 +11,15 @@ module.exports = {
       text = `SELECT json_agg(json_build_object('review_id', r.id, 'rating', r.rating, 'summary', r.summary, 'recommend', r.recommend, 'response', r.response, 'body', r.body, 'date', TO_TIMESTAMP(r.date/1000), 'reviewer_name', r.reviewer_name, 'helpfulness', r.helpfulness, 'photos', (SELECT json_agg(json_build_object('id', p.photo_id, 'url', p.url)) FROM photos p WHERE r.id = p.review_id))) FROM reviews r WHERE r.product_id = $1 AND r.reported = false GROUP BY r.helpfulness ORDER BY r.helpfulness LIMIT $2`;
     }
     let values = [productId, count];
-    return client.query(text, values);
+    return pool.connect()
+      .then((client) => {
+        return client.query(text, values);
+        client.release();
+      })
+      .catch(err => {
+        console.error(err);
+        client.release();
+      })
   },
 
   getMetaData: (productId) => {
@@ -26,11 +34,12 @@ module.exports = {
     let text = 'INSERT INTO reviews(product_id, rating, summary, body, recommend, reviewer_name, reviewer_email) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id AS review_id';
     let values = [product_id, rating, summary, body, recommend, reviewer_name, reviewer_email];
 
-    return client.query(text, values)
+    return pool.connect()
       .then((results) => {
-        return results.rows[0].review_id;
-      })
-      .then((review_id) => {
+          return client.query(text, values);
+        })
+      .then((results) => {
+        let review_id = results.rows[0].review_id;
         let queries = [];
         if (photos && photos.length !== 0) {
           let text2 = 'INSERT INTO photos(review_id, url) VALUES'
@@ -51,18 +60,37 @@ module.exports = {
         }
         return Promise.all(queries);
       })
-      .catch(e => console.error(e.stack));
+      .catch(err => {
+        console.error(err);
+        client.release();
+      })
     },
 
     addHelpful: (review_id) => {
       let text = 'UPDATE reviews SET helpfulness = helpfulness + 1 WHERE id = $1';
       let values = [review_id];
-      return client.query(text, values);
+      return pool.connect()
+      .then((client) => {
+        return client.query(text, values);
+        client.release();
+      })
+      .catch(err => {
+        console.error(err);
+        client.release();
+      })
     },
 
     addReport: (review_id) => {
       let text = 'UPDATE reviews SET reported = true WHERE id = $1';
       let values = [review_id];
-      return client.query(text, values);
+      return pool.connect()
+      .then((client) => {
+        return client.query(text, values);
+        client.release();
+      })
+      .catch(err => {
+        console.error(err);
+        client.release();
+      })
     }
   };
